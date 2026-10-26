@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Quant Math Trainer</title>
-  <rect width="64" height="64" rx="19" fill="#245d48"/>
-  <text x="32" y="41" text-anchor="middle" fill="#fff" font-family="DejaVu Sans, Arial, sans-serif" font-size="35" font-weight="700" letter-spacing="-2">q.</text>
+    <title>Quant Math Trainer</title>
+    <rect width="64" height="64" rx="19" fill="#245d48"/>
+    <text x="32" y="41" text-anchor="middle" fill="#fff" font-family="DejaVu Sans, Arial, sans-serif" font-size="35" font-weight="700" letter-spacing="-2">q.</text>
 </svg>

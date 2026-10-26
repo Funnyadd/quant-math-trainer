@@ -5,19 +5,22 @@ export function usePractice(type) {
     const [elapsedMs, setElapsedMs] = useState(0);
 
     const startedAt = useRef(null);
+    const pausedAt = useRef(null);
     const locked = useRef(false);
 
     useLayoutEffect(() => {
         if (session?.phase !== "answering") return;
 
         startedAt.current = performance.now();
+        pausedAt.current = null;
         locked.current = false;
-        setElapsedMs(0);
 
         let frame;
 
         function tick() {
-            setElapsedMs(performance.now() - startedAt.current);
+            if (startedAt.current !== null) {
+                setElapsedMs((pausedAt.current ?? performance.now()) - startedAt.current);
+            }
             frame = requestAnimationFrame(tick);
         }
 
@@ -26,17 +29,20 @@ export function usePractice(type) {
         return () => cancelAnimationFrame(frame);
     }, [session?.phase, session?.index, session?.exercises]);
 
-    const start = useCallback((count) => {
+    const start = useCallback((count, options = {}) => {
         if (!Number.isInteger(count) || count < 1 || count > type.maxExercises) {
             return;
         }
 
         locked.current = true;
         startedAt.current = null;
+        pausedAt.current = null;
 
+        setElapsedMs(0);
         setSession({
             phase: "answering",
-            exercises: type.generateSet(count),
+            exercises: type.generateSet(count, options),
+            options,
             index: 0,
             results: [],
         });
@@ -46,6 +52,7 @@ export function usePractice(type) {
         if (
             session?.phase !== "answering" ||
             locked.current ||
+            pausedAt.current !== null ||
             startedAt.current === null ||
             !type.isValidInput(answer)
         ) {
@@ -59,7 +66,6 @@ export function usePractice(type) {
 
         const result = {
             ...exercise,
-            typeId: type.id,
             userAnswer: answer.trim(),
             correct: type.validate(exercise, answer),
             durationMs,
@@ -75,6 +81,9 @@ export function usePractice(type) {
     }, [session, type]);
 
     const next = useCallback(() => {
+        if (session?.phase !== "feedback") return;
+
+        setElapsedMs(0);
         setSession((current) => {
             if (current?.phase !== "feedback") return current;
 
@@ -88,14 +97,37 @@ export function usePractice(type) {
                 index: current.index + 1,
             };
         });
+    }, [session?.phase]);
+
+    const pause = useCallback(() => {
+        if (session?.phase === "answering" && startedAt.current !== null && pausedAt.current === null) {
+            pausedAt.current = performance.now();
+        }
+    }, [session?.phase]);
+
+    const resume = useCallback(() => {
+        if (pausedAt.current !== null && startedAt.current !== null) {
+            startedAt.current += performance.now() - pausedAt.current;
+            pausedAt.current = null;
+        }
     }, []);
+
+    const finish = useCallback(() => {
+        if (!session?.results.length) return;
+
+        locked.current = true;
+        startedAt.current = null;
+        pausedAt.current = null;
+        setSession(current => ({ ...current, phase: "summary" }));
+    }, [session]);
 
     const reset = useCallback(() => {
         locked.current = true;
         startedAt.current = null;
+        pausedAt.current = null;
         setSession(null);
         setElapsedMs(0);
     }, []);
 
-    return { session, elapsedMs, start, submit, next, reset };
+    return { session, elapsedMs, start, submit, next, pause, resume, finish, reset };
 }
