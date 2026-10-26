@@ -172,6 +172,10 @@ For UI or session changes, manually check correct and incorrect feedback, Enter 
 
 Build with `npm run build` and serve `dist/` from a static host. For Vercel, use the Vite preset, `npm run build` as the build command, and `dist` as the output directory. No database or runtime environment configuration is needed. The manifest currently uses root-relative URLs and a `/` scope; serving under a subpath requires updating those settings as well as Vite's base path.
 
+Vercel Web Analytics is mounted once in `src/main.jsx` for production builds. It tracks visits and page views; practice screens share the same URL. The component is disabled during `npm run dev`.
+
+To activate collection, open the Vercel project's **Analytics** tab, select **Enable**, and deploy the updated app. Analytics endpoints are supplied by Vercel hosting, so local production previews do not provide the collection service. See the [Vercel Web Analytics setup guide](https://vercel.com/docs/analytics/quickstart).
+
 [`vite.config.js`](vite.config.js) configures `vite-plugin-pwa` to generate the manifest and service worker. The precache includes HTML, JavaScript, CSS, icons, fonts, and keyboard sounds. MathLive assets are served from `public/`, and Fontsource interface fonts are bundled locally. All practice modes work offline once the production assets have been cached and **Ready to practice offline** appears.
 
 Updates use a prompt. During a set, the app asks the user to finish before reloading; **Update app** becomes available outside an active set. Cached assets can be cleared or evicted by the browser, and downloading an update requires a connection. Offline support does not persist session progress.
